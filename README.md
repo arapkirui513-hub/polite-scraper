@@ -132,3 +132,16 @@ Logs are written to both the console and the configured log file.
 - Requests
 - BeautifulSoup4
 - PyYAML
+
+## Ethical Scraping Considerations
+
+This scraper is designed to follow responsible web scraping practices.
+
+- Respects `robots.txt` before requesting pages.
+- Uses a descriptive User-Agent containing project identification.
+- Includes a public contact URL.
+- Observes `Crawl-delay` when specified by a site's `robots.txt`.
+- Applies a configurable minimum delay between requests.
+- Retries only transient failures using exponential backoff.
+- Avoids storing duplicate content by comparing SHA-256 content hashes.
+- Is intended for educational purposes and should only be used in accordance with a website's terms of service.
