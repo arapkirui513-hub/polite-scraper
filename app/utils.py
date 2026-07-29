@@ -1,10 +1,22 @@
-"""Logging setup and configuration loading."""
+"""Logging setup, configuration loading, and seed URL loading."""
 
 import logging
 import sys
 from pathlib import Path
 
 import yaml
+
+
+REQUIRED_CONFIG_KEYS = {
+    "seed_urls_file",
+    "output_dir",
+    "log_file",
+    "user_agent",
+    "contact_url",
+    "min_delay_seconds",
+    "timeout_seconds",
+    "max_retries",
+}
 
 
 def setup_logging(log_file: str = "output/scraper.log", level: int = logging.INFO) -> logging.Logger:
@@ -51,7 +63,14 @@ def load_config(config_path: str = "config.yaml") -> dict:
         )
     with open(path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
-    return config or {}
+
+    config = config or {}
+    missing_keys = sorted(REQUIRED_CONFIG_KEYS - config.keys())
+    if missing_keys:
+        missing = ", ".join(missing_keys)
+        raise KeyError(f"Missing required config key(s): {missing}")
+
+    return config
 
 
 def load_seed_urls(seed_file: str) -> list[str]:

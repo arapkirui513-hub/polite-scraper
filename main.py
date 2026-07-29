@@ -1,160 +1,100 @@
 """
 Main entry point for the Polite Scraper.
-
-Pipeline:
-
-seed_urls.txt
-      │
-      ▼
-RobotsChecker
-      ▼
-Fetcher
-      ▼
-Parser
-      ▼
-Extractor
-      ▼
-Cleaner
-      ▼
-Storage
 """
-
-import time
-from pathlib import Path
 
 from app.cleaner import Cleaner
 from app.extractor import Extractor
 from app.fetcher import Fetcher
 from app.parser import Parser
-from app.robots import RobotsChecker
 from app.storage import Storage
-
-USER_AGENT = "KevinKiruiPoliteScraper/1.0"
-CONTACT_URL = "https://github.com/arapkirui513-hub/polite-scraper"
-
-SEED_FILE = Path("data/seed_urls.txt")
-
-
-def load_urls(filepath: Path) -> list[str]:
-    """
-    Load seed URLs from a text file.
-
-    Ignores:
-    - blank lines
-    - comments beginning with #
-    """
-    if not filepath.exists():
-        print(f"Seed file not found: {filepath}")
-        return []
-
-    urls = []
-
-    with open(filepath, "r", encoding="utf-8") as file:
-        for line in file:
-            line = line.strip()
-
-            if not line:
-                continue
-
-            if line.startswith("#"):
-                continue
-
-            urls.append(line)
-
-    return urls
+from app.utils import (
+    load_config,
+    load_seed_urls,
+    setup_logging,
+)
 
 
 def main():
-    urls = load_urls(SEED_FILE)
+    """Run the scraping pipeline."""
+
+    config = load_config()
+
+    logger = setup_logging(config["log_file"])
+
+    urls = load_seed_urls(config["seed_urls_file"])
 
     if not urls:
-        print("No seed URLs found.")
+        logger.warning("No seed URLs found.")
         return
 
-    robots = RobotsChecker(USER_AGENT)
-
     fetcher = Fetcher(
-        user_agent=USER_AGENT,
-        contact_url=CONTACT_URL,
+        user_agent=config["user_agent"],
+        min_delay_seconds=config["min_delay_seconds"],
+        timeout_seconds=config["timeout_seconds"],
+        max_retries=config["max_retries"],
+        contact_url=config["contact_url"],
     )
 
-    storage = Storage()
+    storage = Storage(
+        output_dir=config["output_dir"],
+    )
 
     success = 0
     failed = 0
 
     try:
         for url in urls:
+            logger.info("=" * 70)
+            logger.info("Processing %s", url)
 
-            print("\n" + "=" * 70)
-            print(f"Processing: {url}")
-
-            # Check robots.txt
-            if not robots.can_fetch(url):
-                print("Blocked by robots.txt")
-                failed += 1
-                continue
-
-            # Respect crawl-delay if provided
-            delay = robots.crawl_delay(url)
-
-            if delay:
-                print(f"Waiting {delay:.1f} seconds (crawl-delay)...")
-                time.sleep(delay)
-
-            # Fetch page
             response = fetcher.fetch(url)
 
             if response is None:
-                print("Fetch failed.")
+                logger.warning("Fetch failed: %s", url)
                 failed += 1
                 continue
 
-            # Parse HTML
             soup = Parser.parse(response)
 
             if soup is None:
-                print("Parse failed.")
+                logger.warning("Parse failed: %s", url)
                 failed += 1
                 continue
 
-            # Extract article
             record = Extractor.extract(soup, url)
 
             if record is None:
-                print("Extraction failed.")
+                logger.warning("Extraction failed: %s", url)
                 failed += 1
                 continue
 
-            # Clean text
             cleaned = Cleaner.clean(record)
 
             if cleaned is None:
-                print("Cleaning failed.")
+                logger.warning("Cleaning failed: %s", url)
                 failed += 1
                 continue
 
-            # Save JSON
             filepath = storage.save(cleaned)
 
             if filepath is None:
-                print("Storage failed.")
+                logger.warning("Storage failed: %s", url)
                 failed += 1
                 continue
 
-            print(f"Saved: {filepath}")
+            logger.info("Stored: %s", filepath)
             success += 1
-
-        print("\n" + "=" * 70)
-        print("SCRAPING COMPLETE")
-        print("=" * 70)
-        print(f"Successful : {success}")
-        print(f"Failed     : {failed}")
-        print(f"Total      : {success + failed}")
-        print("=" * 70)
 
     finally:
         fetcher.close()
+
+    logger.info("=" * 70)
+    logger.info("SCRAPING COMPLETE")
+    logger.info("=" * 70)
+    logger.info("Successful: %s", success)
+    logger.info("Failed: %s", failed)
+    logger.info("Total: %s", success + failed)
+    logger.info("=" * 70)
 
 
 if __name__ == "__main__":

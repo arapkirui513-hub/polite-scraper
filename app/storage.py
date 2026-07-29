@@ -1,7 +1,8 @@
 """
 Storage module.
 
-Adds metadata to cleaned records and saves them as JSON.
+Adds metadata to cleaned records, prevents duplicate content,
+and saves records as JSON.
 """
 
 import hashlib
@@ -41,16 +42,42 @@ class Storage:
 
         return domain
 
+    def _find_duplicate(self, content_hash: str) -> Path | None:
+        """
+        Return the path of an existing record with the same content hash,
+        or None if no duplicate exists.
+        """
+        for file in self.output_dir.glob("*.json"):
+            try:
+                with open(file, "r", encoding="utf-8") as f:
+                    existing = json.load(f)
+
+                if existing.get("content_hash") == content_hash:
+                    return file
+
+            except (json.JSONDecodeError, OSError):
+                logger.warning("Could not read %s", file)
+
+        return None
+
     def save(self, record: dict | None) -> Path | None:
         """
-        Save a cleaned record as a JSON document.
+        Save a cleaned record as JSON.
 
-        Returns:
-            Path to the saved JSON file, or None if saving failed.
+        If an identical record already exists (same content hash),
+        return the existing file instead of creating a duplicate.
         """
         if record is None:
             logger.warning("No record supplied for storage.")
             return None
+
+        content_hash = self.content_hash(record["content"])
+
+        duplicate = self._find_duplicate(content_hash)
+
+        if duplicate is not None:
+            logger.info("Duplicate detected. Using existing file: %s", duplicate)
+            return duplicate
 
         output = {
             "id": str(uuid4()),
@@ -58,17 +85,17 @@ class Storage:
             "url": record["url"],
             "category": self._category(record["url"]),
             "content": record["content"],
-            "content_hash": self.content_hash(record["content"]),
+            "content_hash": content_hash,
             "scraped_at": datetime.now(UTC).isoformat(),
         }
 
         filename = f"{output['id']}.json"
         filepath = self.output_dir / filename
 
-        with open(filepath, "w", encoding="utf-8") as file:
+        with open(filepath, "w", encoding="utf-8") as f:
             json.dump(
                 output,
-                file,
+                f,
                 indent=2,
                 ensure_ascii=False,
             )
