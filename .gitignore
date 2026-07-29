@@ -1,0 +1,18 @@
+# Virtual environment
+.venv/
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Generated output (regeneratable, shouldn't bloat the repo)
+output/*.json
+output/*.log
+
+# Local config overrides, if you ever add secrets
+.env
+
+# OS noise
+.DS_Store
+Thumbs.db

@@ -1,0 +1,20 @@
+# Seed URLs for the Kenya public health system corpus.
+# Source: en.wikipedia.org (robots.txt verified compatible with a
+# well-identified, rate-limited crawler).
+#
+# NOT YET VERIFIED: some of these titles may redirect or not exist as
+# standalone articles. Run the scraper against this list first and check
+# the log for 404s / redirects before treating this as final. Do not
+# expand this list until the pipeline works end to end on a small batch.
+
+# National health governance
+https://en.wikipedia.org/wiki/Ministry_of_Health_(Kenya)
+https://en.wikipedia.org/wiki/Healthcare_in_Kenya
+
+# Health financing
+https://en.wikipedia.org/wiki/Social_Health_Authority_(Kenya)
+https://en.wikipedia.org/wiki/Universal_health_coverage
+
+# County health context (ties to Kenya Health Facilities Dashboard)
+https://en.wikipedia.org/wiki/Mandera_County
+https://en.wikipedia.org/wiki/Nyeri_County

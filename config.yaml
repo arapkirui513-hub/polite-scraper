@@ -1,0 +1,21 @@
+# Scraper configuration.
+# Copy this file if you need a second profile (e.g. config.wikipedia.yaml)
+# rather than hardcoding a second target inside the app code.
+
+seed_urls_file: "data/seed_urls.txt"
+output_file: "output/corpus.json"
+log_file: "output/scraper.log"
+
+user_agent: "KevoPortfolioBot/1.0"
+# Set this to a real GitHub repo or portfolio URL before running against
+# a live site. An honest, contactable User-Agent is part of "polite"
+# scraping, not an optional detail.
+contact_url: "https://github.com/YOUR-USERNAME/polite-scraper"
+
+# Floor delay (seconds) between requests to the same domain when
+# robots.txt does not specify its own Crawl-delay. If robots.txt specifies
+# a longer delay, that value is used instead.
+min_delay_seconds: 2.0
+
+timeout_seconds: 10
+max_retries: 3
