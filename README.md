@@ -145,3 +145,14 @@ This scraper is designed to follow responsible web scraping practices.
 - Retries only transient failures using exponential backoff.
 - Avoids storing duplicate content by comparing SHA-256 content hashes.
 - Is intended for educational purposes and should only be used in accordance with a website's terms of service.
+
+## Documentation
+
+Additional project documentation is available in the `docs/` directory:
+
+- [Architecture](docs/architecture.md)
+- [Design Decisions](docs/design-decisions.md)
+- [Review Log](docs/review-log.md)
+- [Future Roadmap](docs/future-roadmap.md)
+- [Lessons Learned](docs/lessons-learned.md)
+- [Changelog](docs/changelog.md)
